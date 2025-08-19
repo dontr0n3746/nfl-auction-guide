@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2025 NFL Full PPR Auction Draft Guide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Chosen Palette: Soft Earth -->
+<!-- Application Structure Plan: A single-page, multi-section dashboard guiding users from pre-draft strategy to in-draft execution. Key sections include an interactive strategy explorer (comparing 'Stars & Scrubs' vs. 'Balanced' with dynamic budget charts), a filterable player valuation tool with AAV range visualizations, and dedicated sections for tactical advice and sleeper picks. This thematic, task-oriented structure is more intuitive for a user preparing for or in a live draft than the report's linear chapter format, allowing quick access to relevant information. -->
+<!-- Visualization & Content Choices: 1. Roster Strategies -> Goal: Compare -> Method: Tabbed content + dynamic Doughnut Chart -> Interaction: Click tabs to update chart/text -> Justification: Visually connects abstract strategies to concrete budget allocations (Chart.js). 2. Player AAVs -> Goal: Compare/Inform -> Method: Filterable HTML table + dynamic Horizontal Bar Chart -> Interaction: Filter by position updates table/chart -> Justification: Clearly visualizes player value and market volatility/range, a key report theme (Chart.js). 3. Tactical Advice -> Goal: Organize/Inform -> Method: HTML/CSS Card Grid -> Interaction: Static display -> Justification: Breaks down complex tactics into digestible, scannable points. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background-color: #F8F5F2;
+color: #4A4A4A;
+}
+.nav-link {
+transition: color 0.3s ease, border-color 0.3s ease;
+}
+.nav-link:hover {
+color: #C89B7B;
+}
+.active-nav-link {
+color: #A0522D;
+border-bottom-color: #A0522D;
+}
+.strategy-btn {
+transition: all 0.3s ease;
+}
+.active-strategy {
+background-color: #A0522D !important;
+color: #FFFFFF !important;
+box-shadow: 0 4px 14px 0 rgba(160, 82, 45, 0.39);
+}
+.chart-container {
+position: relative;
+width: 100%;
+max-width: 400px;
+margin-left: auto;
+margin-right: auto;
+height: 300px;
+max-height: 350px;
+}
+@media (min-width: 768px) {
+.chart-container {
+height: 350px;
+}
+}
+.player-table-row:hover {
+background-color: #EFEBE9;
+}
+</style>
+</head>
+<body class="antialiased">
+
+<header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+<nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<div class="flex-shrink-0">
+<h1 class="text-xl font-bold text-[#A0522D]">Auction Draft HQ</h1>
+</div>
+<div class="hidden md:block">
+<div class="ml-10 flex items-baseline space-x-4">
+<a href="#prep" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">Prep</a>
+<a href="#strategy" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">Strategy</a>
+<a href="#players" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">Players</a>
+<a href="#tactics" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">Tactics</a>
+<a href="#sleepers" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">Sleepers</a>
+</div>
+</div>
+</div>
+</nav>
+</header>
+
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+<section id="prep" class="text-center mb-16 md:mb-24">
+<h2 class="text-3xl md:text-5xl font-bold text-gray-800 mb-4">The 2025 Full PPR Auction Draft Compendium</h2>
+<p class="max-w-3xl mx-auto text-lg text-gray-600">
+Welcome to your interactive guide for dominating your 2025 fantasy football auction draft. This application translates complex strategy into actionable insights, helping you navigate every phase of the draft with data-driven confidence. Move beyond simple rankings and master the art of roster construction, player valuation, and in-draft tactics.
+</p>
+</section>
+
+<section id="strategy" class="mb-16 md:mb-24">
+<div class="text-center mb-12">
+<h3 class="text-3xl font-bold text-gray-800">Choose Your Draft Blueprint</h3>
+<p class="mt-2 text-gray-600">Every successful draft starts with a plan. Explore the most common roster construction archetypes to find the one that fits your style. Select a strategy to see how it impacts budget allocation and learn its core principles.</p>
+</div>
+
+<div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
+<div class="w-full lg:w-1/2">
+<div class="bg-white p-6 rounded-xl shadow-lg">
+<div class="flex justify-center mb-6 space-x-2">
+<button id="balancedBtn" class="strategy-btn active-strategy text-sm font-semibold py-2 px-4 rounded-full bg-gray-200 text-gray-700">Balanced Roster</button>
+<button id="starsScrubsBtn" class="strategy-btn text-sm font-semibold py-2 px-4 rounded-full bg-gray-200 text-gray-700">Stars & Scrubs</button>
+<button id="heroRbBtn" class="strategy-btn text-sm font-semibold py-2 px-4 rounded-full bg-gray-200 text-gray-700">Hero RB</button>
+</div>
+<div id="strategy-content">
+</div>
+</div>
+</div>
+<div class="w-full lg:w-1/2">
+<div class="bg-white p-6 rounded-xl shadow-lg">
+<h4 class="text-center text-xl font-semibold mb-4 text-gray-800">Positional Budget Allocation</h4>
+<div class="chart-container">
+<canvas id="budgetChart"></canvas>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="players" class="mb-16 md:mb-24">
+<div class="text-center mb-12">
+<h3 class="text-3xl font-bold text-gray-800">Player Valuation & Market Analysis</h3>
+<p class="mt-2 text-gray-600 max-w-3xl mx-auto">Analyze the 2025 player market by filtering by position. The chart visualizes the Average Auction Value (AAV) range for each player, highlighting market volatility and potential value opportunities. A wider bar indicates greater disagreement in the market, which you can exploit.</p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-lg">
+<div class="flex flex-wrap items-center justify-center gap-4 mb-6">
+<span class="font-semibold">Filter by Position:</span>
+<div class="flex space-x-2">
+<button class="filter-btn bg-blue-500 text-white py-2 px-4 rounded-full text-sm" data-position="ALL">All</button>
+<button class="filter-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-full text-sm" data-position="RB">RB</button>
+<button class="filter-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-full text-sm" data-position="WR">WR</button>
+<button class="filter-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-full text-sm" data-position="QB">QB</button>
+<button class="filter-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-full text-sm" data-position="TE">TE</button>
+</div>
+</div>
+<div class="flex flex-col md:flex-row gap-8">
+<div class="w-full md:w-1/2 overflow-x-auto">
+<table class="min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pos</th>
+<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AAV Range</th>
+</tr>
+</thead>
+<tbody id="player-table-body" class="bg-white divide-y divide-gray-200">
+</tbody>
+</table>
+</div>
+<div class="w-full md:w-1/2">
+<div class="h-96 md:h-[500px] relative">
+<canvas id="playerAAVChart"></canvas>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="tactics" class="mb-16 md:mb-24">
+<div class="text-center mb-12">
+<h3 class="text-3xl font-bold text-gray-800">In-Draft Tactical Playbook</h3>
+<p class="mt-2 text-gray-600">Master the art of the auction with these key in-draft tactics.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<div class="bg-white p-6 rounded-xl shadow-lg">
+<h4 class="font-bold text-lg mb-2 text-[#A0522D]">Strategic Nominations</h4>
+<p class="text-gray-600 text-sm">Nominate players you DON'T want early to drain your opponents' budgets. Trigger positional runs on QBs or TEs to create value elsewhere. Use your first few nominations to gauge the room's spending habits.</p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-lg">
+<h4 class="font-bold text-lg mb-2 text-[#A0522D]">Bidding with Precision</h4>
+<p class="text-gray-600 text-sm">Your goal is to acquire players for less than their market AAV. Pounce on value when it appears. Avoid "price enforcing"—bidding up players just to make others pay more. It's a risky move that can backfire, leaving you with a player you didn't want.</p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-lg">
+<h4 class="font-bold text-lg mb-2 text-[#A0522D]">Dynamic Budgeting</h4>
+<p class="text-gray-600 text-sm">No plan is rigid. Be prepared to adjust your budget on the fly. If you get a bargain, you now have more to spend elsewhere. If you overpay, know where you'll cut back. The cardinal sin is leaving money on the table—spend every last dollar.</p>
+</div>
+</div>
+</section>
+
+<section id="sleepers">
+<div class="text-center mb-12">
+<h3 class="text-3xl font-bold text-gray-800">Late-Round Gold: Sleeper Spotlight</h3>
+<p class="mt-2 text-gray-600">Leagues are won in the late rounds. Target these high-upside players who can be acquired for a minimal cost.</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Ashton Jeanty <span class="text-sm font-medium text-gray-500">(RB, LV)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">A rookie with a projected three-down skillset. Could emerge as the lead back in Las Vegas, offering massive upside at a bargain price.</p>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Jaylen Warren <span class="text-sm font-medium text-gray-500">(RB, PIT)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">With Najee Harris gone, Warren is poised for a significant workload increase. He's an efficient back with pass-catching ability.</p>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Jaylen Waddle <span class="text-sm font-medium text-gray-500">(WR, MIA)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">A prime bounce-back candidate. Last year's dip in production can be attributed to injuries; expect a return to elite form.</p>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Josh Downs <span class="text-sm font-medium text-gray-500">(WR, IND)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">Has the potential to emerge as the WR1 for the Colts, building on his connection with QB Anthony Richardson.</p>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Trevor Lawrence <span class="text-sm font-medium text-gray-500">(QB, JAX)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">Under the radar with a new, QB-friendly offensive coordinator and an explosive new set of weapons. A top-tier QB available at a discount.</p>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Brenton Strange <span class="text-sm font-medium text-gray-500">(TE, JAX)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">Entering his third year as the primary TE in a new, exciting offense. Valued far below his potential fantasy output, making him a prime late-round steal.</p>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Emeka Egbuka <span class="text-sm font-medium text-gray-500">(WR, TB)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">A talented rookie with the opportunity to carve out a significant role in the Buccaneers' passing attack.</p>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-lg flex flex-col">
+<h4 class="font-bold text-lg">Jayden Higgins <span class="text-sm font-medium text-gray-500">(WR, HOU)</span></h4>
+<p class="text-gray-600 text-sm mt-1 flex-grow">Could become a relevant piece in the high-powered Texans offense. A great low-cost investment with high potential.</p>
+</div>
+</div>
+</section>
+
+</main>
+
+<footer class="bg-white mt-16">
+<div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+<p>&copy; 2025 Auction Draft HQ. All data is for informational purposes only.</p>
+</div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+const strategyData = {
+balanced: {
+title: 'The Balanced Roster',
+description: 'This strategy involves an even distribution of your budget across all starting positions. The goal is to build a deep, consistent roster with a strong bench, avoiding overspending on a few superstars. This approach is effective in drafts where managers overpay for elite talent early.',
+budget: { QB: 15, RB: 75, WR: 85, TE: 23, Bench: 2 },
+data: [15, 75, 85, 23, 2]
+},
+starsScrubs: {
+title: 'Stars & Scrubs',
+description: 'This high-risk, high-reward philosophy involves spending a large portion of your budget on 2-3 elite, top-tier players. The rest of the roster is filled with low-cost, high-upside sleepers. Success depends on your stars dominating and hitting on your late-round picks.',
+budget: { QB: 5, RB: 90, WR: 95, TE: 5, Bench: 5 },
+data: [5, 90, 95, 5, 5]
+},
+heroRb: {
+title: 'The Hero RB',
+description: 'This hybrid approach focuses on securing one elite, high-volume running back to be your workhorse. The rest of the budget is then used to build depth at WR and other positions. It acknowledges the volatility of the RB position while securing a foundational piece.',
+budget: { QB: 10, RB: 65, WR: 95, TE: 20, Bench: 10 },
+data: [10, 65, 95, 20, 10]
+}
+};
+
+const playerData = [
+{ name: "Ja'Marr Chase", pos: 'WR', min: 47, max: 62 },
+{ name: "Bijan Robinson", pos: 'RB', min: 46, max: 55 },
+{ name: "Saquon Barkley", pos: 'RB', min: 46, max: 65 },
+{ name: "CeeDee Lamb", pos: 'WR', min: 42, max: 47 },
+{ name: "Justin Jefferson", pos: 'WR', min: 48, max: 49 },
+{ name: "Jahmyr Gibbs", pos: 'RB', min: 46, max: 48 },
+{ name: "Puka Nacua", pos: 'WR', min: 39, max: 43 },
+{ name: "Amon-Ra St. Brown", pos: 'WR', min: 36, max: 42 },
+{ name: "Malik Nabers", pos: 'WR', min: 38, max: 42 },
+{ name: "Derrick Henry", pos: 'RB', min: 33, max: 54 },
+{ name: "Garrett Wilson", pos: 'WR', min: 20, max: 28 },
+{ name: "Davante Adams", pos: 'WR', min: 22, max: 27 },
+{ name: "Jaxon Smith-Njigba", pos: 'WR', min: 20, max: 24 },
+{ name: "James Cook", pos: 'RB', min: 25, max: 30 },
+{ name: "Jonathan Taylor", pos: 'RB', min: 28, max: 34 },
+{ name: "James Conner", pos: 'RB', min: 18, max: 23 },
+{ name: "Josh Allen", pos: 'QB', min: 25, max: 31 },
+{ name: "Brock Bowers", pos: 'TE', min: 20, max: 30 },
+{ name: "Trevor Lawrence", pos: 'QB', min: 8, max: 15 },
+{ name: "Brenton Strange", pos: 'TE', min: 1, max: 5 },
+].sort((a,b) => b.max - a.max);
+
+
+const strategyContentEl = document.getElementById('strategy-content');
+const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+let budgetChart;
+
+function updateStrategyContent(strategyKey) {
+const data = strategyData[strategyKey];
+strategyContentEl.innerHTML = `
+<h4 class="text-xl font-bold mb-2 text-gray-800">${data.title}</h4>
+<p class="text-gray-600 text-sm">${data.description}</p>
+`;
+updateBudgetChart(data.data);
+
+document.querySelectorAll('.strategy-btn').forEach(btn => btn.classList.remove('active-strategy'));
+document.getElementById(`${strategyKey}Btn`).classList.add('active-strategy');
+}
+
+function updateBudgetChart(data) {
+if (budgetChart) {
+budgetChart.data.datasets[0].data = data;
+budgetChart.update();
+} else {
+budgetChart = new Chart(budgetCtx, {
+type: 'doughnut',
+data: {
+labels: ['QB', 'RB', 'WR', 'TE', 'Bench ($1s)'],
+datasets: [{
+label: 'Budget Allocation',
+data: data,
+backgroundColor: ['#BDB76B', '#8FBC8F', '#ADD8E6', '#F0E68C', '#D3D3D3'],
+borderColor: '#FFFFFF',
+borderWidth: 2,
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+position: 'bottom',
+},
+tooltip: {
+callbacks: {
+label: function(context) {
+let label = context.label || '';
+if (label) {
+label += ': ';
+}
+if (context.parsed !== null) {
+label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(context.parsed);
+}
+return label;
+}
+}
+}
+}
+}
+});
+}
+}
+
+document.getElementById('balancedBtn').addEventListener('click', () => updateStrategyContent('balanced'));
+document.getElementById('starsScrubsBtn').addEventListener('click', () => updateStrategyContent('starsScrubs'));
+document.getElementById('heroRbBtn').addEventListener('click', () => updateStrategyContent('heroRb'));
+
+updateStrategyContent('balanced');
+
+const playerTableBody = document.getElementById('player-table-body');
+const playerAAVCtx = document.getElementById('playerAAVChart').getContext('2d');
+let playerAAVChart;
+
+function populatePlayerTable(filteredData) {
+playerTableBody.innerHTML = '';
+filteredData.forEach(player => {
+const row = document.createElement('tr');
+row.className = 'player-table-row cursor-pointer';
+row.innerHTML = `
+<td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${player.name}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${player.pos}</td>
+<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">$${player.min} - $${player.max}</td>
+`;
+playerTableBody.appendChild(row);
+});
+updatePlayerAAVChart(filteredData);
+}
+
+function updatePlayerAAVChart(data) {
+const labels = data.map(p => p.name);
+const chartData = data.map(p => [p.min, p.max]);
+
+if (playerAAVChart) {
+playerAAVChart.data.labels = labels;
+playerAAVChart.data.datasets[0].data = chartData;
+playerAAVChart.update();
+} else {
+playerAAVChart = new Chart(playerAAVCtx, {
+type: 'bar',
+data: {
+labels: labels,
+datasets: [{
+label: 'AAV Range',
+data: chartData,
+backgroundColor: 'rgba(160, 82, 45, 0.6)',
+borderColor: 'rgba(160, 82, 45, 1)',
+borderWidth: 1,
+barPercentage: 0.8,
+categoryPercentage: 0.8,
+}]
+},
+options: {
+indexAxis: 'y',
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+display: false
+},
+tooltip: {
+callbacks: {
+label: function(context) {
+const val = context.raw;
+return `AAV Range: $${val[0]} - $${val[1]}`;
+}
+}
+}
+},
+scales: {
+x: {
+beginAtZero: true,
+title: {
+display: true,
+text: 'Auction Value ($)'
+}
+},
+y: {
+ticks: {
+autoSkip: false,
+font: {
+size: 10
+}
+}
+}
+}
+}
+});
+}
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+btn.addEventListener('click', function() {
+document.querySelectorAll('.filter-btn').forEach(b => {
+b.classList.remove('bg-blue-500', 'text-white');
+b.classList.add('bg-gray-200', 'text-gray-700');
+});
+this.classList.add('bg-blue-500', 'text-white');
+this.classList.remove('bg-gray-200', 'text-gray-700');
+
+const position = this.dataset.position;
+const filteredData = position === 'ALL' ? playerData : playerData.filter(p => p.pos === position);
+populatePlayerTable(filteredData);
+});
+});
+
+populatePlayerTable(playerData);
+
+const sections = document.querySelectorAll('section');
+const navLinks = document.querySelectorAll('.nav-link');
+
+const observerOptions = {
+root: null,
+rootMargin: '0px',
+threshold: 0.4
+};
+
+const observer = new IntersectionObserver((entries, observer) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) {
+navLinks.forEach(link => {
+link.classList.remove('active-nav-link');
+if (link.getAttribute('href').substring(1) === entry.target.id) {
+link.classList.add('active-nav-link');
+}
+});
+}
+});
+}, observerOptions);
+
+sections.forEach(section => {
+observer.observe(section);
+});
+});
+</script>
+</body>
+</html>
